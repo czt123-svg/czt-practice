@@ -1,0 +1,92 @@
+package network;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.PrintWriter;
+import java.net.ServerSocket;
+import java.net.Socket;
+import java.util.Scanner;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadPoolExecutor;
+
+/**
+ * Created with IntelliJ IDEA.
+ * Description:
+ * User: czt20
+ * Date: 2026 -09-16
+ * Time: 15:56
+ * TCP协议的服务器
+ */
+public class TCPechoSever {
+    //TCP协议服务器特色类ServerSocket
+    private ServerSocket serverSocket = null;
+    public TCPechoSever(int port) throws IOException {
+        serverSocket = new ServerSocket(port);
+    }
+    public void start() throws IOException {
+        System.out.println("服务器启动\n");
+        while (true){
+            //通过读写clientsocket来与客户端交流
+            Socket clientsocket =  serverSocket.accept();
+            //进行处理
+
+            //运用多线程来满足一个服务器同时服务几个客户端
+            /*Thread t = new Thread(()->{
+                try {
+                    processconnect(clientsocket);
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            });
+                    t.start();
+            */
+            //优化方案->线程池
+            ExecutorService executorService = Executors.newCachedThreadPool();
+            executorService.submit(()->{
+                try {
+                    processconnect(clientsocket);
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            });
+
+        }
+    }
+
+    private void processconnect(Socket clientsocket) throws IOException {
+        System.out.printf("IP地址:%s ,端口:%d\n",clientsocket.getInetAddress(),clientsocket.getPort());
+        try(InputStream in = clientsocket.getInputStream();
+            OutputStream out = clientsocket.getOutputStream()) {
+            Scanner scanner = new Scanner(in);
+            PrintWriter writer = new PrintWriter(out);
+            while(true){
+                if(!scanner.hasNext()){
+                    System.out.printf("%s:%d客户端下线\n",clientsocket.getInetAddress(),clientsocket.getPort());
+                }
+                String request =scanner.next();
+                //处理响应
+                String repond = save(request);
+                //返回响应给客户端
+                writer.println(repond);
+                writer.flush();
+                //打印日志
+                System.out.printf("服务器响应 %s\n",repond);
+            }
+
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }finally{
+            clientsocket.close();
+        }
+    }
+    private String save(String request) {
+        return  request;
+    }
+    public static void main(String[] args) throws IOException {
+        TCPechoSever sever = new TCPechoSever(9900);
+        sever.start();
+    }
+}
