@@ -1,0 +1,53 @@
+package network;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.PrintWriter;
+import java.net.Socket;
+import java.util.Scanner;
+
+/**
+ * Created with IntelliJ IDEA.
+ * Description:
+ * User: czt20
+ * Date: 2026 -09-16
+ * Time: 15:56
+ */
+public class TCPechoClient {
+    private Socket socket = null;
+    public  TCPechoClient(String ip, int port) throws IOException {
+        //可直接传递不用参数保存
+        socket = new Socket(ip,port);
+    }
+    public void start(){
+        System.out.println("用户端登录成功");
+        Scanner scanner = new Scanner(System.in);
+        try(InputStream in = socket.getInputStream();OutputStream out = socket.getOutputStream();) {
+            Scanner input = new Scanner(in);
+            PrintWriter writer = new PrintWriter(out);
+            while (true){
+                //读取用户输入
+                String request =scanner.next();
+                //把输入传给服务器
+                writer.println(request);
+                writer.flush();
+                //打印处理结果
+                String repond = input.next();
+                System.out.println(repond);
+            }
+
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private String handle(String request) {
+        return  request;
+    }
+
+    public static void main(String[] args) throws IOException {
+        TCPechoClient c = new TCPechoClient("172.24.74.31",9900);
+        c.start();
+    }
+}
