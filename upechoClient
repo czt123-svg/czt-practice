@@ -1,0 +1,49 @@
+package network;
+
+import java.io.IOException;
+import java.net.*;
+import java.util.Scanner;
+
+/**
+ * Created with IntelliJ IDEA.
+ * Description:
+ * User: czt20
+ * Date: 2026 -09-14
+ * Time: 21:34
+ */
+public class upechoClient {
+    DatagramSocket socket = null;
+    String severIP;
+    int pork ;
+    public upechoClient(String severIP,int port) throws SocketException {
+        socket = new DatagramSocket();
+        this.severIP = severIP;
+        this.pork = port;
+    }
+    public void start() throws IOException {
+        //1.控制台输入用户输入内容
+        Scanner scanner = new Scanner(System.in);
+        while (true){
+            System.out.println("请输入要发送的内容:");
+            if(!scanner.hasNext()){
+                break;
+            }
+            String request = scanner.next();
+            //2.把请求发给服务器
+            DatagramPacket requestPacket = new DatagramPacket(request.getBytes(),request.getBytes().length,
+                    InetAddress.getByName(severIP),pork);
+            //3.发送数据报
+            socket.send(requestPacket);
+            //4.接收
+            DatagramPacket respondPacket = new DatagramPacket(new byte[4080],4080);
+            socket.receive(respondPacket);
+            String repond = new String(respondPacket.getData(),0,respondPacket.getLength());
+            System.out.println(repond);
+        }
+    }
+
+    public static void main(String[] args) throws IOException {
+        upechoClient upechoClient = new upechoClient("127.0.0.1",9223);
+        upechoClient.start();
+    }
+}
