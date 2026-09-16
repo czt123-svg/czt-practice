@@ -1,0 +1,47 @@
+    package network;
+
+    import java.io.IOException;
+    import java.net.DatagramPacket;
+    import java.net.DatagramSocket;
+    import java.net.SocketException;
+
+    /**
+     * Created with IntelliJ IDEA.
+     * Description:
+     * User: czt20
+     * Date: 2026 -09-14
+     * Time: 19:30
+     */
+    public class udpechoSever {
+        DatagramSocket res = null;
+        public udpechoSever(int port) throws SocketException {
+            res = new DatagramSocket(port);
+        }
+        public void start () throws IOException {
+            System.out.println("服务器运行");
+            while(true){
+                //1.读取请求和解析
+                DatagramPacket requestPacket = new DatagramPacket(new byte[2048],2048);
+                res.receive(requestPacket);
+                //2.把读取到的二进制数据转成字符串
+                String request = new String(requestPacket.getData(),0,requestPacket.getLength());
+                //3.计算响应
+                String respond = process(request);
+                //4.将结果转换成新的数据包
+                DatagramPacket respondPacket = new DatagramPacket(respond.getBytes(),respond.getBytes().length,requestPacket.getSocketAddress());
+                //5.把结果发送出去
+                res.send(respondPacket);
+                //打印日志
+                System.out.printf("[%s:%d] req:%s,resp:%s\n",respondPacket.getAddress().toString(),respondPacket.getPort(),request,respond);
+            }
+        }
+
+        private String process(String request) {
+            return request;
+        }
+
+        public static void main(String[] args) throws IOException {
+            udpechoSever u = new udpechoSever(9223);
+            u.start();
+        }
+    }
